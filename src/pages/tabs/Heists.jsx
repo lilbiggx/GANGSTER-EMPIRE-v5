@@ -6,6 +6,8 @@ import { dur, cedi } from "../../lib/fmt";
 import { Btn, Card, Bar, SectionTitle, Chip, Sheet } from "../../components/game/ui";
 import { HEIST_EVENT_MAP, ROLE_ARCH } from "../../data/gameData";
 
+const DEFAULT_HEIST_DAILY_LIMIT = 3;
+
 function chance(tpl, sel, crew, derived, roles, boost) {
   let score = 0;
   for (const [slotKey, cid] of Object.entries(sel)) {
@@ -43,7 +45,7 @@ function PlanSheet({ tpl, onClose }) {
   return (
     <Sheet open onClose={onClose} testid="heist-plan-sheet">
       <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-blood">
-        Tactical Syndicate Operation · ({d?.heist_count ?? 0}/{d?.heist_limit ?? 4} Today)
+        Tactical Syndicate Operation · ({d?.heist_count ?? 0}/{d?.heist_limit ?? DEFAULT_HEIST_DAILY_LIMIT} Today)
       </div>
       <h3 className="font-display text-2xl uppercase text-zinc-100">{tpl.name}</h3>
       <div className="mt-1 text-xs text-zinc-400" data-testid="heist-plan-summary">
@@ -192,12 +194,13 @@ function ResultSheet({ res, onClose }) {
 }
 
 export default function Heists() {
-  const { player: p, config, act } = useGame();
+  const { player: p, derived: d, config, act } = useGame();
   const now = useNow(1000);
   const [plan, setPlan] = useState(null);
   const [res, setRes] = useState(null);
 
-  const todayHeistDone = p.last_heist_day === new Date().toISOString().slice(0, 10);
+  const heistLimit = d?.heist_limit ?? DEFAULT_HEIST_DAILY_LIMIT;
+  const todayHeistDone = (d?.heist_count ?? 0) >= heistLimit;
 
   return (
     <div className="space-y-4">
@@ -366,9 +369,9 @@ export default function Heists() {
           title="Daily Heist Targets"
           right={
             todayHeistDone ? (
-              <Chip className="bg-blood/20 text-blood border-blood/30">1/1 Done Today</Chip>
+              <Chip className="bg-blood/20 text-blood border-blood/30">{heistLimit}/{heistLimit} Done Today</Chip>
             ) : (
-              <Chip className="bg-kgreen/20 text-kgreen border-kgreen/30">Available (0/1)</Chip>
+              <Chip className="bg-kgreen/20 text-kgreen border-kgreen/30">Available ({d?.heist_count ?? 0}/{heistLimit})</Chip>
             )
           }
         />
@@ -428,7 +431,7 @@ export default function Heists() {
                   {running
                     ? "Operation Active"
                     : todayHeistDone
-                    ? "Daily Limit Reached (1/1)"
+                    ? `Daily Limit Reached (${heistLimit}/${heistLimit})`
                     : "Plan & Assign Crew"}
                 </Btn>
               </Card>
