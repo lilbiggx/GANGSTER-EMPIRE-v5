@@ -1,48 +1,37 @@
-  return {
-    tier,
-    tier_name: tierObj.name,
-    rate,
-    tap_value: Math.max(1, Math.min(3, Math.floor(rate * 0.15) + 1)),
-    fee,
-    vault_cap: vCap,
-    defence: def,
-    power: pow,
-    boss_power: loadoutPower(p, p.loadout),
-    crew_cap: 12 + (p.upgrades?.quarters || 0) * 2,
-    bribe_cost: 20000,
-    heat_cooling_per_hour: p.lie_low_until > now ? 180 : (35 + (p.upgrades?.safehouse ? 15 : 0) + ((p.facilities?.safehouse || 0) * 10) + ((p.facilities?.infirmary || 0) * 5)),
-    assassin_contact: ASSASSIN_CONTACT,
-    daily_hustle_cap: DAILY_HUSTLE_CAP,
-    xp_needed: xpNeeded(p.level),
-    slots: 2 + (p.build_slots || 0),
-    offline_cap_h: p.upgrades?.safehouse ? 24 : 12,
-    hustles: hustlesAcc,
-    fronts: frontsAcc,
-    upgrades: upgradesAcc,
-    farm: {
-      grow: growTimes,
-      prices: prices,
-      up_cost: upCost,
-      plot_cost: plotCost,
-    },
-    store: store,
-    store_next: storeNext,
-    restock_cost: 25,
-    crew_eff: crewEff,
-    crew_wpow: crewWpow,
-    fortify_cost: 40 + (p.raid?.fortify || 0) * 25,
-    lawyer_left: Math.max(0, 2 - (p.lawyer_week?.count || 0)),
-    boss: RIVALS[Math.floor(now / (7 * 86400)) % RIVALS.length].id,
-    respect_gain: Math.max(1, Math.floor(Math.sqrt(Math.max(0, Number(p.lifetime || 0) / 100000)))),
-    mult: Number(mult(p, now).toFixed(2)),
-    is_arrested: p.arrested_until ? now < p.arrested_until : false,
-    arrest_left: p.arrested_until ? Math.max(0, p.arrested_until - now) : 0,
-    bail_cost: 250,
-    rival_powers: Object.fromEntries(RIVALS.map((r) => [r.id, getRivalPower(r, p)])),
-    heist_count: (p.heist_day?.day === dayKey(now) ? p.heist_day.count : 0),
-    heist_limit: DAILY_HEIST_BASE_LIMIT + (p.heist_day?.day === dayKey(now) ? (p.heist_day.ad_extra || 0) : 0),
-    heist_ad_extra: (p.heist_day?.day === dayKey(now) ? (p.heist_day.ad_extra || 0) : 0),
-    heist_limit_reached: (p.heist_day?.day === dayKey(now) ? p.heist_day.count : 0) >= (DAILY_HEIST_BASE_LIMIT + (p.heist_day?.day === dayKey(now) ? (p.heist_day.ad_extra || 0) : 0)),
-    crew_daily_payroll: (p.crew || []).filter((c) => !c.merc).reduce((sum, c) => sum + (c.daily_rate || calcCrewDailyRate(c)), 0),
-  };
+export function settleHeat(p: Player, now: number) {
+  // Check if arrest timer completed
+  if (p.arrested_until && now >= p.arrested_until) {
+    p.arrested_until = 0;
+    p.heat = 20;
+    p.heat_ts = now;
+    p.log.unshift({
+      t: now,
+      msg: "Released from police lockup after serving 2 hours! Businesses resumed.",
+      kind: "good",
+    });
+  }
+
+  // If currently arrested, heat stays pinned at 100
+  if (p.arrested_until && now < p.arrested_until) {
+    p.heat = 100;
+    p.heat_ts = now;
+    return;
+  }
+
+  const t0 = p.heat_ts;
+  const fast = Math.max(0, Math.min(now, p.lie_low_until) - t0);
+  const slow = Math.max(0, now - t0 - fast);
+
+  // Heat cooldown tuning:
+  // Normal cooling: 0 heat/hr
+  // When lying low: 50 heat/hr (0.83 heat/minute)
+  const naturalRate = 0;
+  const lieLowRate = 50;
+
+  p.heat = Math.max(0, p.heat - (fast * lieLowRate + slow * naturalRate) / H);
+  p.heat_ts = now;
+
+  if (p.heat >= 100 && (!p.arrested_until || now >= p.arrested_until)) {
+    triggerArrest(p, now);
+  }
 }
