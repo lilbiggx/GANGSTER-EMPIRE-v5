@@ -1,0 +1,8 @@
+{
+  "name": "Underworld Empire: Accra Edition",
+  "description": "Mobile-first idle crime strategy game set in Accra with hustles, money laundering, crew heists, rivals, and 3D boss customization.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
