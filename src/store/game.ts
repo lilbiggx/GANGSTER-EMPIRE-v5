@@ -52,6 +52,7 @@ const callbacks: Record<string, (res: any) => void> = {};
 let tapBuf = 0;
 let tapTimer: any = null;
 
+// Shared static config used across screens and actions.
 const GAME_CONFIG = {
   districts: DISTRICTS,
   hustles: HUSTLES,
@@ -155,6 +156,7 @@ export const useGame = create<GameState>((set, get) => ({
   more: null,
   lockerTarget: "boss",
 
+  // Apply a small patch from the engine without resetting the whole player object.
   apply: (res: any) => {
     if (!res) return;
     set((st) => ({
@@ -166,6 +168,7 @@ export const useGame = create<GameState>((set, get) => ({
 
   now: () => Date.now() / 1000 + get().offset,
 
+  // Keep the selected tab in sync with the browser state.
   setTab: (tab) => {
     localStorage.setItem("uw_tab", tab);
     set({ tab, more: null });
@@ -185,6 +188,7 @@ export const useGame = create<GameState>((set, get) => ({
   },
   dismissWelcome: () => set({ welcome: null }),
 
+  // Save the current player to local storage for offline progress.
   save: () => {
     const { player } = get();
     if (player) {
@@ -196,6 +200,7 @@ export const useGame = create<GameState>((set, get) => ({
     }
   },
 
+  // Load the saved player and recalculate derived values for the current time.
   async load() {
     try {
       const saved = localStorage.getItem(SAVE_KEY);
@@ -229,6 +234,7 @@ export const useGame = create<GameState>((set, get) => ({
     }
   },
 
+  // Create a fresh boss state with derived stats ready to use.
   createOfflineBoss(name = "Kojo Bullet", district = "dockside", preset = "newbie") {
     const p = createPlayer(`boss_${Date.now()}`, name, district, preset);
     const now = Date.now() / 1000;
@@ -252,6 +258,7 @@ export const useGame = create<GameState>((set, get) => ({
     toast.info("Logged out from street command.");
   },
 
+  // Run an action through the engine and update state after the result is valid.
   act(type, payload = {}, { optimistic, onResult } = {}) {
     const actionId = Math.random().toString(36).slice(2);
     const state = get();
@@ -265,7 +272,6 @@ export const useGame = create<GameState>((set, get) => ({
 
     if (onResult) callbacks[actionId] = onResult;
 
-    // Execute immediately in engine
     const now = Date.now() / 1000;
     const playerClone = JSON.parse(JSON.stringify(get().player));
     const outcome = executeAction(playerClone, type, payload, now);
@@ -280,13 +286,13 @@ export const useGame = create<GameState>((set, get) => ({
       }
     } else {
       toast.error(outcome.error || "Action failed");
-      // Revert optimistic if failed
       get().load();
     }
 
     return actionId;
   },
 
+  // Tap income is buffered briefly to avoid too many small state writes.
   tap() {
     const { player, derived } = get();
     if (!player || !derived) return;
@@ -309,7 +315,7 @@ export const useGame = create<GameState>((set, get) => ({
   },
 }));
 
-// Background tick every 1.5 seconds for timers, heat settling & idle accrual
+// Background tick keeps timers, heat decay, and idle income up to date.
 setInterval(() => {
   const state = useGame.getState();
   if (state.player) {
@@ -320,7 +326,7 @@ setInterval(() => {
   }
 }, 1500);
 
-// Auto-save every 10 seconds
+// Save every few seconds so the game keeps progress even if the tab closes.
 setInterval(() => {
   useGame.getState().save();
 }, 10000);
