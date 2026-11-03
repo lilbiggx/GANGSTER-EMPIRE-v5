@@ -14,6 +14,7 @@ function AssassinSheet({ r, onClose }) {
   const contracts = contact?.contracts || [];
   const g = p.grudges[r.id] || 0;
 
+  // Hire an assassin when the player confirms the contract.
   const hireAssassin = (contract) => {
     act(
       "assassin_contract",
@@ -113,6 +114,7 @@ function TruceSheet({ r, onClose }) {
   const costDirty = Math.floor(800 + g * 20);
   const costClean = Math.floor(250 + g * 10);
 
+  // Send a truce offer and close the sheet after success.
   const sendTruce = (kind) => {
     act("truce_rival", { rival: r.id, kind }, {
       onResult: () => {
@@ -176,6 +178,7 @@ export default function Rivals() {
   const [truceRival, setTruceRival] = useState(null);
   const [assassinRival, setAssassinRival] = useState(null);
 
+  // Track the active raid and contracts so the screen can show the current threat state.
   const activeRaidRival = p.raid ? config.rivals.find((r) => r.id === p.raid.rival) : null;
   const raidTimeLeft = p.raid ? Math.max(0, p.raid.resolve_at - now) : 0;
   const contact = config.assassin_contact;
@@ -199,10 +202,6 @@ export default function Rivals() {
           <Shield className="h-3.5 w-3.5 text-kgreen shrink-0" />
           <span><b>Street Calm Active:</b> Grudges cool naturally by -1 every ~20s of peace. Heat dissipating steadily.</span>
         </div>
-        heat_cooling_per_hour:
-  p.lie_low_until > now
-    ? 180
-    : (35 + (p.upgrades?.safehouse ? 15 : 0) + ((p.facilities?.safehouse || 0) * 10) + ((p.facilities?.infirmary || 0) * 5)),
       </div>
 
       {/* ASSASSIN CONTACT DOSSIER BANNER */}
@@ -302,7 +301,7 @@ export default function Rivals() {
                     </span>
                   </div>
                   <div className="text-[11px] text-zinc-400">
-                    Boss: <b className="text-zinc-200">{r.boss}</b> · Stance: <span className="text-zinc-300 font-semibold">{r.personality}</span> · {config.districts.find((x) => x.id === r.district)?.name}
+                    Boss: <b className="text-zinc-200">{r.boss}</b> · Stance: <span className="text-zinc-300 font-semibold">{r.personality}</span> · {config.districts.find((x) => x.id === r.district)?.name || "Unknown"}
                   </div>
                   {ally && (
                     <div className="mt-0.5 text-[10px] text-zinc-400 flex items-center gap-1">
