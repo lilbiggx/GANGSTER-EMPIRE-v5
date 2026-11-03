@@ -199,9 +199,10 @@ export default function Rivals() {
           <Shield className="h-3.5 w-3.5 text-kgreen shrink-0" />
           <span><b>Street Calm Active:</b> Grudges cool naturally by -1 every ~20s of peace. Heat dissipating steadily.</span>
         </div>
-        <span className="text-[10px] text-zinc-500 font-mono">
-          Cooling Rate: ~{d.heat_cooling_per_hour || 35} Heat/hr
-        </span>
+        heat_cooling_per_hour:
+  p.lie_low_until > now
+    ? 180
+    : (35 + (p.upgrades?.safehouse ? 15 : 0) + ((p.facilities?.safehouse || 0) * 10) + ((p.facilities?.infirmary || 0) * 5)),
       </div>
 
       {/* ASSASSIN CONTACT DOSSIER BANNER */}
