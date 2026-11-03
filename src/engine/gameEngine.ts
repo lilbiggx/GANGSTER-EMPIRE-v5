@@ -939,10 +939,10 @@ export function settleHeat(p: Player, now: number) {
   // Safehouse upgrade/facility: +15 to +25 heat/hr
   // Infirmary facility: +5 heat/hr per lvl
   // When lying low (fast): 180 heat/hr (3 heat/minute)
-  const safehouseBonus = (p.upgrades?.safehouse ? 15 : 0) + ((p.facilities?.safehouse || 0) * 10);
+  const safehouseBonus = (p.upgrades?.safehouse ? 0 : 0) + ((p.facilities?.safehouse || 0) * 10);
   const infirmaryBonus = (p.facilities?.infirmary || 0) * 5;
-  const naturalRate = 35 + safehouseBonus + infirmaryBonus;
-  const lieLowRate = 180;
+  const naturalRate = 0 + safehouseBonus + infirmaryBonus;
+  const lieLowRate = 20;
 
   p.heat = Math.max(0, p.heat - (fast * lieLowRate + slow * naturalRate) / H);
   p.heat_ts = now;
