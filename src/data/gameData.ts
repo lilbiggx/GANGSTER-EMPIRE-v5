@@ -4,7 +4,7 @@ export interface District {
   vibe: string;
 }
 
-export const DAILY_HUSTLE_CAP = 1000;
+export const DAILY_HUSTLE_CAP = 1000000;
 
 export interface Hustle {
   id: string;
