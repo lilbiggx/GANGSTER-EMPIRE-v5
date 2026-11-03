@@ -1160,7 +1160,7 @@ export function calcDerived(p: Player, now: number) {
     boss_power: loadoutPower(p, p.loadout),
     crew_cap: 12 + (p.upgrades?.quarters || 0) * 2,
     bribe_cost: 20000,
-    heat_cooling_per_hour: p.lie_low_until > now ? 180 : (35 + (p.upgrades?.safehouse ? 15 : 0) + ((p.facilities?.safehouse || 0) * 10)),
+    heat_cooling_per_hour: p.lie_low_until > now ? 20 : (0 + (p.upgrades?.safehouse ? 0 : 0) + ((p.facilities?.safehouse || 0) * 10)),
     assassin_contact: ASSASSIN_CONTACT,
     daily_hustle_cap: DAILY_HUSTLE_CAP,
     xp_needed: xpNeeded(p.level),
